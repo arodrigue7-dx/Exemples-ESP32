@@ -1,0 +1,23 @@
+/*
+  Proyecto: Blink con tiempos configurables
+  Descripción: Parpadeo de un LED con tiempos personalizables para ON y OFF.
+  Autor: [Tu nombre]
+*/
+
+// Definimos constantes para los pines
+const int LED_PIN = 2;
+
+// Variables para los tiempos (modificables)
+int tiempoOn = 1000;   // Tiempo encendido en ms
+int tiempoOff = 500;   // Tiempo apagado en ms
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(LED_PIN, HIGH);
+  delay(tiempoOn);
+  digitalWrite(LED_PIN, LOW);
+  delay(tiempoOff);
+}
