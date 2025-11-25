@@ -1,0 +1,53 @@
+#define BUTTON_PIN 13  // GPIO13 pin connected to button
+#define DEBOUNCE_TIME 50  // debounce time in milliseconds
+
+// Variables for debounce logic
+int lastSteadyState = LOW;
+int lastFlickerableState = LOW;
+int currentState;
+unsigned long lastDebounceTime = 0;
+
+// Counter variable
+int pulseCount = 0;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  
+  Serial.println("=== CONTADOR DE PULSACIONES ===");
+  Serial.print("Pulsaciones iniciales: ");
+  Serial.println(pulseCount);
+  Serial.println("Pulsa el botón conectado a GPIO13...");
+}
+
+// Función para leer el botón con debounce
+bool buttonPressed() {
+  currentState = digitalRead(BUTTON_PIN);
+
+  if (currentState != lastFlickerableState) {
+    lastDebounceTime = millis();
+    lastFlickerableState = currentState;
+  }
+
+  if ((millis() - lastDebounceTime) > DEBOUNCE_TIME) {
+    if (lastSteadyState != currentState) {
+      lastSteadyState = currentState;
+      // Retorna true si el botón está presionado (LOW para INPUT_PULLUP)
+      return (currentState == LOW);
+    }
+  }
+  
+  return false;
+}
+
+void loop() {
+  if (buttonPressed()) {
+    pulseCount++;  // Incrementar contador
+    
+    Serial.print("¡Botón pulsado! Total de pulsaciones: ");
+    Serial.println(pulseCount);
+    
+    // Pausa
+    delay(200);
+  }
+}
