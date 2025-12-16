@@ -1,0 +1,82 @@
+#include <WiFi.h>
+#include <WebServer.h>
+
+const char* ssid = "Wokwi-GUEST";
+const char* password = "";
+
+WebServer server(80);
+
+const int ledPin = 2;
+bool ledState = LOW;
+bool blinking = false;
+unsigned long previousMillis = 0;
+const long interval = 500; // medio segundo
+
+void handleRoot() {
+  String html = "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width, initial-scale=1'>";
+  html += "<style>body{font-family:Arial;text-align:center;margin-top:50px;}";
+  html += "button{padding:15px 25px;margin:10px;font-size:18px;}</style></head><body>";
+  html += "<h1>Control LED desde ESP32</h1>";
+  html += "<p>LED actual: " + String(ledState ? "ENCENDIDO" : "APAGADO") + "</p>";
+  html += "<button onclick=\"location.href='/on'\">ENCENDER</button>";
+  html += "<button onclick=\"location.href='/off'\">APAGAR</button>";
+  html += "<button onclick=\"location.href='/blink'\">PARPADEAR</button>";
+  html += "</body></html>";
+  server.send(200, "text/html", html);
+}
+
+void handleOn() {
+  ledState = HIGH;
+  blinking = false;
+  digitalWrite(ledPin, ledState);
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+
+void handleOff() {
+  ledState = LOW;
+  blinking = false;
+  digitalWrite(ledPin, ledState);
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+
+void handleBlink() {
+  blinking = true;
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);
+
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nConectado a WiFi");
+  Serial.print("IP: ");
+  Serial.println(WiFi.localIP());
+
+  server.on("/", handleRoot);
+  server.on("/on", handleOn);
+  server.on("/off", handleOff);
+  server.on("/blink", handleBlink);
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
+  
+  if (blinking) {
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= interval) {
+      previousMillis = currentMillis;
+      ledState = !ledState;
+      digitalWrite(ledPin, ledState);
+    }
+  }
+}
